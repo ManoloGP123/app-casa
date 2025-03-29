@@ -7,7 +7,11 @@ const routes: Routes = [
   {
     path: '',
     component: CasasPage
+  },  {
+    path: 'casas-modal',
+    loadChildren: () => import('./casas-modal/casas-modal.module').then( m => m.CasasModalPageModule)
   }
+
 ];
 
 @NgModule({

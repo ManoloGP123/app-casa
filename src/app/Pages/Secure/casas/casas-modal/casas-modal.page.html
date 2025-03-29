@@ -1,0 +1,102 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ isEditing ? 'Editar Propiedad' : 'Nueva Propiedad' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancelar()">Cancelar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form (ngSubmit)="guardarCasa()">
+    <!-- Sección de información básica -->
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Dirección*</ion-label>
+        <ion-input [(ngModel)]="nuevaCasa.direccion" name="direccion" required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Precio (USD)*</ion-label>
+        <ion-input type="number" [(ngModel)]="nuevaCasa.precio" name="precio" required></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Dimensiones (m²)</ion-label>
+        <ion-input [(ngModel)]="nuevaCasa.dimensiones" name="dimensiones"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <!-- Sección de características - MODIFICADO -->
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Habitaciones</ion-label>
+        <ion-input type="number" [(ngModel)]="nuevaCasa.habitaciones" name="habitaciones" 
+                  min="1" max="20" (ionChange)="validarNumero($event, 'habitaciones')"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Baños</ion-label>
+        <ion-input type="number" [(ngModel)]="nuevaCasa.banos" name="banos" 
+                  min="1" max="10" (ionChange)="validarNumero($event, 'banos')"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <!-- Resto del formulario se mantiene igual -->
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Provincia*</ion-label>
+        <ion-select [(ngModel)]="nuevaCasa.provincia" name="provincia" (ionChange)="onProvinciaChange()" required>
+          <ion-select-option *ngFor="let provincia of provinciasEcuador" [value]="provincia">
+            {{ provincia }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Ciudad*</ion-label>
+        <ion-select [(ngModel)]="nuevaCasa.ciudad" name="ciudad" [disabled]="!nuevaCasa.provincia" required>
+          <ion-select-option *ngFor="let ciudad of ciudades" [value]="ciudad">
+            {{ ciudad }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Estado</ion-label>
+        <ion-select [(ngModel)]="nuevaCasa.estado" name="estado">
+          <ion-select-option *ngFor="let estado of estados" [value]="estado">
+            {{ estado | titlecase }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">URL de la Imagen</ion-label>
+        <ion-input [(ngModel)]="nuevaCasa.imagen" name="imagen"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Descripción</ion-label>
+        <ion-textarea [(ngModel)]="nuevaCasa.descripcion" name="descripcion" rows="4"></ion-textarea>
+      </ion-item>
+    </ion-list>
+  </form>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button *ngIf="isEditing" color="danger" (click)="confirmarEliminar()">
+        Eliminar
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="guardarCasa()" strong>
+        {{ isEditing ? 'Actualizar' : 'Guardar' }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

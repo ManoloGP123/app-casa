@@ -1,13 +1,79 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>casas</ion-title>
+    <ion-title>Administrar Casas</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">casas</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <!-- Filtros -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Filtros</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Provincia</ion-label>
+        <ion-select [(ngModel)]="provinciaSeleccionada" (ionChange)="ciudadSeleccionada = ''">
+          <ion-select-option value="">Todas</ion-select-option>
+          <ion-select-option *ngFor="let provincia of provinciasEcuador" [value]="provincia">
+            {{ provincia }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item *ngIf="provinciaSeleccionada">
+        <ion-label>Ciudad</ion-label>
+        <ion-select [(ngModel)]="ciudadSeleccionada">
+          <ion-select-option value="">Todas</ion-select-option>
+          <ion-select-option *ngFor="let ciudad of ciudadesPorProvincia[provinciaSeleccionada]" [value]="ciudad">
+            {{ ciudad }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Estado</ion-label>
+        <ion-select [(ngModel)]="filtroEstado">
+          <ion-select-option value="todos">Todos</ion-select-option>
+          <ion-select-option value="disponible">Disponible</ion-select-option>
+          <ion-select-option value="reservado">Reservado</ion-select-option>
+          <ion-select-option value="vendido">Vendido</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-button expand="block" (click)="aplicarFiltros()">Aplicar Filtros</ion-button>
+      <ion-button expand="block" fill="outline" (click)="limpiarFiltros()">Limpiar Filtros</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Lista de casas -->
+  <ion-list>
+    <ion-item *ngFor="let casa of casas">
+      <ion-thumbnail slot="start" *ngIf="casa.imagen">
+        <img [src]="casa.imagen" alt="Imagen de la casa">
+      </ion-thumbnail>
+      
+      <ion-label>
+        <h2>{{ casa.direccion }}</h2>
+        <p>{{ casa.ciudad }}, {{ casa.provincia }}</p>
+        <p><strong>Precio:</strong> ${{ casa.precio | number }}</p>
+        <p><strong>Estado:</strong> {{ casa.estado }}</p>
+      </ion-label>
+      
+      <ion-button fill="clear" color="warning" (click)="abrirModalCasa(casa)">
+        <ion-icon name="pencil-outline"></ion-icon>
+      </ion-button>
+      
+      <ion-button fill="clear" color="danger" (click)="eliminarCasa(casa.id_casa)">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <!-- Botón flotante para agregar -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="abrirModalCasa()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
