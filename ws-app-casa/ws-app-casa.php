@@ -231,3 +231,71 @@ elseif ($post['accion'] == "eliminarCasa") {
         $respuesta = array('estado' => false, 'mensaje' => 'Error al eliminar la casa: ' . mysqli_error($mysqli));
     }
 }
+elseif ($post['accion'] == "guardarCita") {
+    $id_casa = isset($post['id_casa']) ? $mysqli->real_escape_string($post['id_casa']) : null;
+    $id_asesor = isset($post['id_asesor']) ? $mysqli->real_escape_string($post['id_asesor']) : null;
+    $id_cliente = isset($post['id_cliente']) ? $mysqli->real_escape_string($post['id_cliente']) : null;
+    $fecha = isset($post['fecha']) ? $mysqli->real_escape_string($post['fecha']) : null;
+    $hora = isset($post['hora']) ? $mysqli->real_escape_string($post['hora']) : null;
+
+    // Validar datos requeridos
+    if (!$id_casa || !$id_asesor || !$id_cliente || !$fecha || !$hora) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Todos los campos son obligatorios']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("INSERT INTO citas (
+        id_casa, 
+        id_asesor, 
+        id_cliente, 
+        fecha, 
+        hora, 
+        estado
+    ) VALUES (?, ?, ?, ?, ?, 'Pendiente')");
+    
+    $stmt->bind_param("sssss", $id_casa, $id_asesor, $id_cliente, $fecha, $hora);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Cita agendada correctamente']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al guardar cita: ' . $mysqli->error]);
+    }
+    
+    
+    exit;
+}
+elseif ($post['accion'] == "buscarUsuariosPorRol") {
+    $rol = isset($post['rol']) ? $mysqli->real_escape_string($post['rol']) : '';
+    $busqueda = isset($post['busqueda']) ? $mysqli->real_escape_string($post['busqueda']) : '';
+
+    $where = "WHERE r.nombre_rol = '$rol'";
+    
+    if (!empty($busqueda)) {
+        $where .= " AND u.nombres_completos LIKE '%$busqueda%'";
+    }
+
+    $query = "SELECT 
+                u.id_usuario, 
+                u.nombres_completos, 
+                u.direccion, 
+                u.telefono, 
+                u.email,
+                r.nombre_rol
+              FROM usuarios u
+              INNER JOIN roles r ON u.id_rol = r.id_rol
+              $where
+              ORDER BY u.nombres_completos";
+
+    $result = $mysqli->query($query);
+
+    if ($result && $result->num_rows > 0) {
+        $usuarios = array();
+        while ($row = $result->fetch_assoc()) {
+            $usuarios[] = $row;
+        }
+        echo json_encode(['estado' => true, 'usuarios' => $usuarios]);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'No se encontraron usuarios']);
+    }
+    exit;
+}

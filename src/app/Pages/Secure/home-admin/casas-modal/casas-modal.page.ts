@@ -82,7 +82,7 @@ export class CasasModalPage implements OnInit {
     await this.modalCtrl.dismiss();
     
     // Navega a la página de citas
-    this.navCtrl.navigateForward('/citas');
+    this.navCtrl.navigateRoot('/citas');
     
     
   }
