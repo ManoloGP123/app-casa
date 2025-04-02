@@ -53,11 +53,11 @@ if ($post['accion'] == "login") {
     echo json_encode($respuesta);
 }
 
-// Cargar todas las casas con filtros
 if ($post['accion'] == "cargarCasas") {
     $provincia = isset($post['provincia']) ? $post['provincia'] : '';
     $ciudad = isset($post['ciudad']) ? $post['ciudad'] : '';
     $estado = isset($post['estado']) ? $post['estado'] : '';
+    $direccion = isset($post['direccion']) ? $post['direccion'] : '';
 
     $where = "WHERE 1=1";
     if (!empty($provincia)) {
@@ -68,6 +68,9 @@ if ($post['accion'] == "cargarCasas") {
     }
     if (!empty($estado)) {
         $where .= sprintf(" AND estado = '%s'", mysqli_real_escape_string($mysqli, $estado));
+    }
+    if (!empty($direccion)) {
+        $where .= sprintf(" AND direccion LIKE '%%%s%%'", mysqli_real_escape_string($mysqli, $direccion));
     }
 
     $sentencia = "SELECT 
@@ -97,36 +100,49 @@ if ($post['accion'] == "cargarCasas") {
     } else {
         $respuesta = array('estado' => false, 'mensaje' => 'No se encontraron casas con los filtros seleccionados');
     }
+    
+    echo json_encode($respuesta);
 }
 
-// Cargar datos de una casa específica
 elseif ($post['accion'] == "cargarCasa") {
-    $id = $post['id'];
+    $id = isset($post['id']) ? $post['id'] : null;
+    
+    if (!$id) {
+        $respuesta = array('estado' => false, 'mensaje' => 'ID no proporcionado');
+        echo json_encode($respuesta);
+        exit;
+    }
 
-    $sentencia = sprintf("SELECT 
-                            id_casa, 
-                            direccion, 
-                            precio, 
-                            dimensiones, 
-                            habitaciones, 
-                            banos, 
-                            descripcion, 
-                            estado, 
-                            provincia, 
-                            ciudad, 
-                            imagen 
-                          FROM casas 
-                          WHERE id_casa = '%s'",
-                          mysqli_real_escape_string($mysqli, $id));
+    $sentencia = $mysqli->prepare("SELECT 
+                                    id_casa, 
+                                    direccion, 
+                                    precio, 
+                                    dimensiones, 
+                                    habitaciones, 
+                                    banos, 
+                                    descripcion, 
+                                    estado, 
+                                    provincia, 
+                                    ciudad, 
+                                    imagen 
+                                  FROM casas 
+                                  WHERE id_casa = ?");
+    $sentencia->bind_param("s", $id);
+    $sentencia->execute();
+    $result = $sentencia->get_result();
 
-    $result = mysqli_query($mysqli, $sentencia);
-
-    if (mysqli_num_rows($result) > 0) {
-        $casa = mysqli_fetch_assoc($result);
+    if ($result->num_rows > 0) {
+        $casa = $result->fetch_assoc();
         $respuesta = array('estado' => true, 'casa' => $casa);
     } else {
         $respuesta = array('estado' => false, 'mensaje' => 'Casa no encontrada');
     }
+    
+    // Debug: Ver la respuesta que se envía
+    error_log("Respuesta: " . json_encode($respuesta));
+    
+    echo json_encode($respuesta);
+    exit;
 }
 
 // Guardar nueva casa
@@ -215,30 +231,3 @@ elseif ($post['accion'] == "eliminarCasa") {
         $respuesta = array('estado' => false, 'mensaje' => 'Error al eliminar la casa: ' . mysqli_error($mysqli));
     }
 }
-
-// Obtener ciudades por provincia
-elseif ($post['accion'] == "obtenerCiudades") {
-    $provincia = $post['provincia'];
-
-    $sentencia = sprintf("SELECT DISTINCT ciudad FROM casas WHERE provincia = '%s' ORDER BY ciudad",
-                          mysqli_real_escape_string($mysqli, $provincia));
-
-    $result = mysqli_query($mysqli, $sentencia);
-
-    if (mysqli_num_rows($result) > 0) {
-        $ciudades = array();
-        while ($row = mysqli_fetch_assoc($result)) {
-            $ciudades[] = $row['ciudad'];
-        }
-        $respuesta = array('estado' => true, 'ciudades' => $ciudades);
-    } else {
-        $respuesta = array('estado' => false, 'mensaje' => 'No se encontraron ciudades para esta provincia');
-    }
-}
-
-echo json_encode($respuesta);
-
-
-
-
-

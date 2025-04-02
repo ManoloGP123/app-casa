@@ -1,0 +1,58 @@
+.search-input {
+    --background: #f8f8f8;
+    --border-radius: 8px;
+    --padding-start: 12px;
+    margin: 0;
+  }
+  
+  ion-item {
+    --padding-start: 0;
+  }
+  
+  .property-item {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    margin-bottom: 8px;
+    
+    ion-thumbnail {
+      --border-radius: 4px;
+      width: 80px;
+      height: 80px;
+    }
+    
+    h2 {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .price-tag {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    p {
+      font-size: 14px;
+      color: #777;
+    }
+  }
+  
+  ion-item-divider {
+    min-height: 30px;
+    --background: transparent;
+    --color: var(--ion-color-medium);
+    font-size: 14px;
+    margin: 8px 0;
+    padding: 0 16px;
+    
+    ion-label {
+      margin: 8px 0;
+    }
+  }
+  
+  ion-button[fill="clear"] {
+    --color: var(--ion-color-primary);
+    font-weight: 400;
+  }

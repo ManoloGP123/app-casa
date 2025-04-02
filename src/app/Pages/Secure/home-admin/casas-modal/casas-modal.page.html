@@ -1,0 +1,81 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Detalles de la Propiedad</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrarModal()">
+        <ion-icon slot="icon-only" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div *ngIf="isLoading" class="loading-spinner">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && casa">
+    <ion-card>
+      <img *ngIf="casa.imagen" [src]="casa.imagen" alt="Imagen de la propiedad">
+      <ion-card-header>
+        <ion-card-title>{{ casa.direccion }}</ion-card-title>
+        <ion-card-subtitle>{{ casa.ciudad }}, {{ casa.provincia }}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6">
+              <ion-item lines="none">
+                <ion-icon name="cash-outline" slot="start"></ion-icon>
+                <ion-label>Precio: ${{ casa.precio }}</ion-label>
+              </ion-item>
+            </ion-col>
+            <ion-col size="6">
+              <ion-item lines="none">
+                <ion-icon name="resize-outline" slot="start"></ion-icon>
+                <ion-label>Dimensiones: {{ casa.dimensiones }} m²</ion-label>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+
+          <ion-row>
+            <ion-col size="6">
+              <ion-item lines="none">
+                <ion-icon name="bed-outline" slot="start"></ion-icon>
+                <ion-label>Habitaciones: {{ casa.habitaciones }}</ion-label>
+              </ion-item>
+            </ion-col>
+            <ion-col size="6">
+              <ion-item lines="none">
+                <ion-icon name="water-outline" slot="start"></ion-icon>
+                <ion-label>Baños: {{ casa.banos }}</ion-label>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+
+          <ion-row>
+            <ion-col>
+              <ion-item lines="none">
+                <ion-icon name="information-circle-outline" slot="start"></ion-icon>
+                <ion-label>Estado: {{ casa.estado }}</ion-label>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+
+        <ion-item lines="none">
+          <ion-label class="ion-text-wrap">
+            <h2>Descripción:</h2>
+            <p>{{ casa.descripcion }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-button expand="block" (click)="agendarCita()" class="agendar-btn">
+      <ion-icon name="calendar-outline" slot="start"></ion-icon>
+      Agendar Cita
+    </ion-button>
+  </div>
+</ion-content>

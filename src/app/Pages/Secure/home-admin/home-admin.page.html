@@ -1,13 +1,107 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>home-admin</ion-title>
+    <ion-title>Administración de Propiedades</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">home-admin</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <ion-grid class="ion-no-padding">
+    <!-- Barra de búsqueda en la parte superior -->
+    <ion-row>
+      <ion-col size="12">
+        <ion-item lines="none" class="ion-margin-horizontal ion-margin-top">
+          <ion-input 
+            [(ngModel)]="direccionBusqueda" 
+            placeholder="Buscar por dirección" 
+            class="search-input"
+            clear-input="true">
+          </ion-input>
+          <ion-button slot="end" (click)="buscarPorDireccion()" fill="clear">
+            <ion-icon name="search-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    
+    <!-- Filtros por provincia y ciudad -->
+    <ion-row>
+      <ion-col size="12" size-md="6">
+        <ion-item lines="none" class="ion-margin-horizontal">
+          <ion-label>Provincia</ion-label>
+          <ion-select 
+            [(ngModel)]="provinciaSeleccionada" 
+            placeholder="Seleccionar" 
+            interface="popover">
+            <ion-select-option *ngFor="let provincia of provinciasEcuador" [value]="provincia">
+              {{provincia}}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+      
+      <ion-col size="12" size-md="6">
+        <ion-item lines="none" class="ion-margin-horizontal">
+          <ion-label>Ciudad</ion-label>
+          <ion-select 
+            [(ngModel)]="ciudadSeleccionada" 
+            placeholder="Seleccionar" 
+            interface="popover">
+            <ion-select-option *ngFor="let ciudad of ciudadesPorProvincia[provinciaSeleccionada] || []" [value]="ciudad">
+              {{ciudad}}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    
+    <!-- Botones de filtro -->
+    <ion-row>
+      <ion-col size="12" class="ion-padding-horizontal">
+        <ion-button size="small" (click)="aplicarFiltros()" class="ion-margin-end">
+          Aplicar
+        </ion-button>
+        <ion-button size="small" fill="outline" (click)="limpiarFiltros()">
+          Limpiar
+        </ion-button>
+      </ion-col>
+    </ion-row>
+    
+    <!-- Separador -->
+    <ion-row>
+      <ion-col>
+        <ion-item-divider class="ion-no-padding">
+          <ion-label>
+            Propiedades disponibles
+          </ion-label>
+        </ion-item-divider>
+      </ion-col>
+    </ion-row>
+    
+    <!-- Lista de casas -->
+    <ion-row>
+      <ion-col size="12">
+        <ion-list>
+          <ion-item *ngFor="let casa of casas" detail="false" class="property-item">
+            <ion-thumbnail slot="start" *ngIf="casa.imagen">
+              <img [src]="casa.imagen" alt="Imagen de propiedad"/>
+            </ion-thumbnail>
+            <ion-label>
+              <h2>{{casa.direccion}}</h2>
+              <h3 class="price-tag">$ {{casa.precio | number:'1.2-2'}}</h3>
+              <p>{{casa.provincia}}, {{casa.ciudad}}</p>
+            </ion-label>
+            <ion-button slot="end" (click)="verCasa(casa.id_casa)" fill="clear">
+              Ver
+            </ion-button>
+          </ion-item>
+          
+          <ion-item *ngIf="casas.length === 0" lines="none" class="ion-text-center ion-padding">
+            <ion-label color="medium">
+              No se encontraron propiedades con los filtros seleccionados
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>
