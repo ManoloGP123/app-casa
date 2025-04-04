@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { CitasModalPageRoutingModule } from './citas-modal-routing.module';
+import { CitasAdminPageRoutingModule } from './citas-admin-routing.module';
 
-import { CitasModalPage } from './citas-modal.page';
+import { CitasAdminPage } from './citas-admin.page';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    CitasModalPageRoutingModule
+    CitasAdminPageRoutingModule
   ],
-  declarations: [CitasModalPage]
+  declarations: [CitasAdminPage]
 })
-export class CitasModalPageModule {}
+export class CitasAdminPageModule {}

@@ -44,6 +44,10 @@ const routes: Routes = [
     path: 'roles',
     loadChildren: () => import('./Pages/Secure/roles/roles.module').then( m => m.RolesPageModule)
   },
+  {
+    path: 'citas-admin',
+    loadChildren: () => import('./Pages/Secure/citas-admin/citas-admin.module').then( m => m.CitasAdminPageModule)
+  },
 ];
 
 @NgModule({

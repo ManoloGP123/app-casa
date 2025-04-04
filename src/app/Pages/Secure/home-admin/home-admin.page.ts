@@ -37,6 +37,8 @@ export class HomeAdminPage implements OnInit {
 
   ngOnInit() {
     this.cargarTodasLasCasas();
+    this.authService.createSession('id_cita', '');
+
   }
 
   cargarTodasLasCasas() {

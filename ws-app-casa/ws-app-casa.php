@@ -299,3 +299,123 @@ elseif ($post['accion'] == "buscarUsuariosPorRol") {
     }
     exit;
 }
+elseif ($post['accion'] == "cargarCitas") {
+    $query = "SELECT 
+                c.id_cita,
+                c.fecha,
+                c.hora,
+                c.estado,
+                casa.direccion as direccion_casa,
+                cliente.nombres_completos as nombre_cliente,
+                asesor.nombres_completos as nombre_asesor
+              FROM citas c
+              INNER JOIN casas casa ON c.id_casa = casa.id_casa
+              INNER JOIN usuarios cliente ON c.id_cliente = cliente.id_usuario
+              INNER JOIN usuarios asesor ON c.id_asesor = asesor.id_usuario
+              ORDER BY c.fecha DESC, c.hora DESC";
+
+    $result = $mysqli->query($query);
+
+    if ($result && $result->num_rows > 0) {
+        $citas = array();
+        while ($row = $result->fetch_assoc()) {
+            $citas[] = $row;
+        }
+        echo json_encode(['estado' => true, 'citas' => $citas]);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'No se encontraron citas']);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "eliminarCita") {
+    $id = isset($post['id']) ? $mysqli->real_escape_string($post['id']) : null;
+
+    if (!$id) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID no proporcionado']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("DELETE FROM citas WHERE id_cita = ?");
+    $stmt->bind_param("s", $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Cita eliminada correctamente']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al eliminar cita']);
+    }
+
+   
+    exit;
+}
+
+elseif ($post['accion'] == "cargarCita") {
+    $id = isset($post['id']) ? $mysqli->real_escape_string($post['id']) : null;
+
+    if (!$id) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID no proporcionado']);
+        exit;
+    }
+
+    $query = "SELECT 
+                c.id_cita,
+                c.fecha,
+                c.hora,
+                c.estado,
+                c.id_casa,
+                c.id_asesor,
+                c.id_cliente,
+                asesor.nombres_completos as nombre_asesor,
+                asesor.telefono as telefono_asesor,
+                cliente.nombres_completos as nombre_cliente,
+                cliente.telefono as telefono_cliente,
+                casa.direccion
+              FROM citas c
+              INNER JOIN usuarios asesor ON c.id_asesor = asesor.id_usuario
+              INNER JOIN usuarios cliente ON c.id_cliente = cliente.id_usuario
+              INNER JOIN casas casa ON c.id_casa = casa.id_casa
+              WHERE c.id_cita = '$id'";
+
+    $result = $mysqli->query($query);
+
+    if ($result && $result->num_rows > 0) {
+        $cita = $result->fetch_assoc();
+        echo json_encode(['estado' => true, 'cita' => $cita]);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Cita no encontrada']);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "editarCita") {
+    $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
+    $id_casa = isset($post['id_casa']) ? $mysqli->real_escape_string($post['id_casa']) : null;
+    $id_asesor = isset($post['id_asesor']) ? $mysqli->real_escape_string($post['id_asesor']) : null;
+    $id_cliente = isset($post['id_cliente']) ? $mysqli->real_escape_string($post['id_cliente']) : null;
+    $fecha = isset($post['fecha']) ? $mysqli->real_escape_string($post['fecha']) : null;
+    $hora = isset($post['hora']) ? $mysqli->real_escape_string($post['hora']) : null;
+
+    if (!$id_cita || !$id_casa || !$id_asesor || !$id_cliente || !$fecha || !$hora) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Todos los campos son obligatorios']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("UPDATE citas SET
+                              id_casa = ?,
+                              id_asesor = ?,
+                              id_cliente = ?,
+                              fecha = ?,
+                              hora = ?
+                              WHERE id_cita = ?");
+    
+    $stmt->bind_param("ssssss", $id_casa, $id_asesor, $id_cliente, $fecha, $hora, $id_cita);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Cita actualizada correctamente']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al actualizar cita: ' . $mysqli->error]);
+    }
+    exit;
+}
+
+

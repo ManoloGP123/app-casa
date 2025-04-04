@@ -80,6 +80,7 @@ export class CasasModalPage implements OnInit {
   async confirmarCita() {
     // Cierra el modal primero
     await this.modalCtrl.dismiss();
+    this.authService.createSession('accion', 'nuevo');
     
     // Navega a la página de citas
     this.navCtrl.navigateRoot('/citas');

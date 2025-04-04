@@ -6,12 +6,12 @@ import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-citas',
-  standalone : false,
+  standalone: false,
   templateUrl: './citas.page.html',
   styleUrls: ['./citas.page.scss'],
 })
 export class CitasPage implements OnInit {
-  casa: any = {}; // Datos de la casa
+  casa: any = {};
   citaData: any = {
     fecha: '',
     hora: '',
@@ -20,6 +20,8 @@ export class CitasPage implements OnInit {
   };
   loading = false;
   minDate: string;
+  isEditMode = false;
+  idCita: string | null = null;
 
   constructor(
     private authService: AuthService,
@@ -27,35 +29,81 @@ export class CitasPage implements OnInit {
     private navCtrl: NavController,
     private alertCtrl: AlertController
   ) {
-    // Establecer fecha mínima como hoy
     this.minDate = new Date().toISOString().split('T')[0];
   }
 
   async ngOnInit() {
-    await this.loadCasaData();
+    this.idCita = await this.authService.getSession('id_cita');
+    
+    if (this.idCita) {
+      this.isEditMode = true;
+      await this.loadCitaData();
+    } else {
+      await this.loadCasaDataFromSession();
+    }
   }
 
-  async loadCasaData() {
+  async loadCitaData() {
+    this.loading = true;
+    const data = { accion: 'cargarCita', id: this.idCita };
+    
+    this.authService.postData(data).subscribe(async (res: any) => {
+      if (res.estado && res.cita) {
+        const cita = res.cita;
+        this.citaData = {
+          fecha: cita.fecha,
+          hora: cita.hora,
+          asesor: {
+            id: cita.id_asesor,
+            nombre: cita.nombre_asesor,
+            telefono: cita.telefono_asesor || ''
+          },
+          cliente: {
+            id: cita.id_cliente,
+            nombre: cita.nombre_cliente,
+            telefono: cita.telefono_cliente || ''
+          }
+        };
+        
+        // Cargar datos de la casa desde la cita en modo edición
+        await this.loadCasaData(cita.id_casa);
+      } else {
+        this.showError('Error', 'No se pudo cargar la cita');
+      }
+      this.loading = false;
+    }, error => {
+      this.loading = false;
+      this.showError('Error de conexión', 'No se pudo cargar la cita');
+    });
+  }
+
+  async loadCasaDataFromSession() {
     this.loading = true;
     const idCasa = await this.authService.getSession('id_casa');
     
     if (idCasa) {
-      const data = { accion: 'cargarCasa', id: idCasa };
-      this.authService.postData(data).subscribe((res: any) => {
-        this.loading = false;
-        if (res.estado) {
-          this.casa = res.casa;
-        } else {
-          this.showError('No se pudo cargar la propiedad', res.mensaje);
-        }
-      }, error => {
-        this.loading = false;
-        this.showError('Error de conexión', 'No se pudo cargar la propiedad');
-      });
+      await this.loadCasaData(idCasa);
     } else {
       this.loading = false;
       this.showError('Error', 'No se encontró la propiedad seleccionada');
     }
+  }
+
+  async loadCasaData(idCasa: string) {
+    this.loading = true;
+    const data = { accion: 'cargarCasa', id: idCasa };
+    
+    this.authService.postData(data).subscribe((res: any) => {
+      this.loading = false;
+      if (res.estado) {
+        this.casa = res.casa;
+      } else {
+        this.showError('No se pudo cargar la propiedad', res.mensaje);
+      }
+    }, error => {
+      this.loading = false;
+      this.showError('Error de conexión', 'No se pudo cargar la propiedad');
+    });
   }
 
   async buscarAsesor() {
@@ -106,8 +154,10 @@ export class CitasPage implements OnInit {
     if (!this.validarCita()) return;
 
     const confirm = await this.alertCtrl.create({
-      header: 'Confirmar Cita',
-      message: `¿Agendar cita para ${this.citaData.fecha} a las ${this.citaData.hora}?`,
+      header: this.isEditMode ? 'Actualizar Cita' : 'Confirmar Cita',
+      message: this.isEditMode 
+        ? `¿Actualizar cita para ${this.citaData.fecha} a las ${this.citaData.hora}?`
+        : `¿Agendar cita para ${this.citaData.fecha} a las ${this.citaData.hora}?`,
       buttons: [
         {
           text: 'Cancelar',
@@ -128,7 +178,8 @@ export class CitasPage implements OnInit {
   private submitCita() {
     this.loading = true;
     const data = {
-      accion: 'guardarCita',
+      accion: this.isEditMode ? 'editarCita' : 'guardarCita',
+      id_cita: this.idCita,
       id_casa: this.casa.id_casa,
       id_asesor: this.citaData.asesor.id,
       id_cliente: this.citaData.cliente.id,
@@ -140,15 +191,17 @@ export class CitasPage implements OnInit {
     this.authService.postData(data).subscribe((res: any) => {
       this.loading = false;
       if (res.estado) {
-        this.showSuccess('Cita agendada', 'La cita se ha registrado correctamente');
+        const successMessage = this.isEditMode 
+          ? 'Cita actualizada correctamente' 
+          : 'Cita agendada correctamente';
+        this.showSuccess('Éxito', successMessage);
         this.resetForm();
-        
       } else {
-        this.showError('Error al guardar', res.mensaje);
+        this.showError('Error', res.mensaje);
       }
     }, error => {
       this.loading = false;
-      this.showError('Error de conexión', 'No se pudo agendar la cita');
+      this.showError('Error de conexión', 'No se pudo guardar la cita');
     });
   }
 
@@ -160,7 +213,6 @@ export class CitasPage implements OnInit {
     if (!this.citaData.asesor) errors.push('Seleccione un asesor');
     if (!this.citaData.cliente) errors.push('Seleccione un cliente');
 
-    // Validar fecha futura
     if (this.citaData.fecha) {
       const fechaCita = new Date(this.citaData.fecha);
       const hoy = new Date();
@@ -186,6 +238,9 @@ export class CitasPage implements OnInit {
       asesor: null,
       cliente: null
     };
+    this.isEditMode = false;
+    this.idCita = null;
+    this.authService.closeSession('id_cita');
   }
 
   private async showError(title: string, message: string) {
