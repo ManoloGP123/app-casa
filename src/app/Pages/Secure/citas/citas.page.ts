@@ -241,6 +241,7 @@ export class CitasPage implements OnInit {
     this.isEditMode = false;
     this.idCita = null;
     this.authService.closeSession('id_cita');
+    this.authService.closeSession('id_casa');
   }
 
   private async showError(title: string, message: string) {

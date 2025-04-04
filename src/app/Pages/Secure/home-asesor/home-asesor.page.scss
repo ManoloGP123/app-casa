@@ -1,0 +1,36 @@
+.center-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  ion-item {
+    --padding-start: 10px;
+    --inner-padding-end: 10px;
+  }
+  
+  ion-label {
+    h2 {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    p {
+      font-size: 0.85rem;
+      color: var(--ion-color-medium);
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+      
+      ion-icon {
+        margin-right: 8px;
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  ion-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+  }

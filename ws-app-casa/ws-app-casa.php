@@ -417,5 +417,54 @@ elseif ($post['accion'] == "editarCita") {
     }
     exit;
 }
+elseif ($post['accion'] == "cargarCitasAsesor") {
+    $id_asesor = isset($post['id_asesor']) ? $mysqli->real_escape_string($post['id_asesor']) : null;
+    $busqueda = isset($post['busqueda']) ? $mysqli->real_escape_string($post['busqueda']) : '';
+
+    if (!$id_asesor) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID de asesor no proporcionado']);
+        exit;
+    }
+
+    $where = "WHERE c.id_asesor = '$id_asesor'";
+    
+    if (!empty($busqueda)) {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $busqueda)) {
+            $where .= " AND c.fecha = '$busqueda'";
+        } else {
+            $where .= " AND cliente.nombres_completos LIKE '%$busqueda%'";
+        }
+    }
+
+    $query = "SELECT 
+                c.id_cita,
+                c.fecha,
+                c.hora,
+                c.estado,
+                casa.direccion as direccion_casa,
+                casa.provincia,
+                casa.ciudad,
+                cliente.nombres_completos as nombre_cliente,
+                cliente.telefono as telefono_cliente
+              FROM citas c
+              INNER JOIN casas casa ON c.id_casa = casa.id_casa
+              INNER JOIN usuarios cliente ON c.id_cliente = cliente.id_usuario
+              $where
+              ORDER BY c.fecha DESC, c.hora DESC";
+
+    $result = $mysqli->query($query);
+
+    if ($result && $result->num_rows > 0) {
+        $citas = array();
+        while ($row = $result->fetch_assoc()) {
+            $citas[] = $row;
+        }
+        echo json_encode(['estado' => true, 'citas' => $citas]);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'No se encontraron citas']);
+    }
+    exit;
+}
+
 
 
