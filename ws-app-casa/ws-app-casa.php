@@ -465,6 +465,140 @@ elseif ($post['accion'] == "cargarCitasAsesor") {
     }
     exit;
 }
+elseif ($post['accion'] == "buscarNegociacion") {
+    $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
 
+    if (!$id_cita) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID de cita no proporcionado']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("SELECT * FROM negociaciones WHERE id_cita = ?");
+    $stmt->bind_param("s", $id_cita);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $negociacion = $result->fetch_assoc();
+        echo json_encode(['estado' => true, 'negociacion' => $negociacion]);
+    } else {
+        echo json_encode(['estado' => false]);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "crearNegociacion") {
+    $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
+    $tipo_pago = isset($post['tipo_pago']) ? $mysqli->real_escape_string($post['tipo_pago']) : null;
+    $monto = isset($post['monto']) ? floatval($post['monto']) : null;
+    $estado = isset($post['estado']) ? $mysqli->real_escape_string($post['estado']) : 'Pendiente';
+    $detalles = isset($post['detalles']) ? $mysqli->real_escape_string($post['detalles']) : null;
+
+    if (!$id_cita || !$tipo_pago || !$monto) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Datos incompletos']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("INSERT INTO negociaciones 
+                             (id_cita, tipo_pago, monto, estado, detalles, fecha_negociacion) 
+                             VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("ssdss", $id_cita, $tipo_pago, $monto, $estado, $detalles);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Negociación creada']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al crear negociación']);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "actualizarNegociacion") {
+    $id_negociacion = isset($post['id_negociacion']) ? $mysqli->real_escape_string($post['id_negociacion']) : null;
+    $tipo_pago = isset($post['tipo_pago']) ? $mysqli->real_escape_string($post['tipo_pago']) : null;
+    $monto = isset($post['monto']) ? floatval($post['monto']) : null;
+    $estado = isset($post['estado']) ? $mysqli->real_escape_string($post['estado']) : null;
+    $detalles = isset($post['detalles']) ? $mysqli->real_escape_string($post['detalles']) : null;
+
+    if (!$id_negociacion || !$tipo_pago || !$monto || !$estado) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Datos incompletos']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("UPDATE negociaciones SET 
+                             tipo_pago = ?, 
+                             monto = ?, 
+                             estado = ?, 
+                             detalles = ?,
+                             fecha_negociacion = NOW()
+                             WHERE id_negociacion = ?");
+    $stmt->bind_param("sdsss", $tipo_pago, $monto, $estado, $detalles, $id_negociacion);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Negociación actualizada']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al actualizar']);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "actualizarEstadoCita") {
+    $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
+    $estado = isset($post['estado']) ? $mysqli->real_escape_string($post['estado']) : null;
+
+    if (!$id_cita || !$estado) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Datos incompletos']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("UPDATE citas SET estado = ? WHERE id_cita = ?");
+    $stmt->bind_param("ss", $estado, $id_cita);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Estado actualizado']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al actualizar']);
+    }
+    exit;
+}
+elseif ($post['accion'] == "buscarNegociacion2") {
+    $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
+
+    if (!$id_cita) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID de cita no proporcionado']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("SELECT id_negociacion FROM negociaciones WHERE id_cita = ?");
+    $stmt->bind_param("s", $id_cita);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $negociacion = $result->fetch_assoc();
+        echo json_encode(['estado' => true, 'negociacion' => $negociacion]);
+    } else {
+        echo json_encode(['estado' => false]);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "eliminarNegociacion") {
+    $id_negociacion = isset($post['id_negociacion']) ? $mysqli->real_escape_string($post['id_negociacion']) : null;
+
+    if (!$id_negociacion) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID de negociación no proporcionado']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("DELETE FROM negociaciones WHERE id_negociacion = ?");
+    $stmt->bind_param("s", $id_negociacion);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Negociación eliminada']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al eliminar negociación']);
+    }
+    exit;
+}
 
 

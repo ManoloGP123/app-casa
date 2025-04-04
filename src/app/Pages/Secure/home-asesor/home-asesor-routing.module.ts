@@ -7,7 +7,11 @@ const routes: Routes = [
   {
     path: '',
     component: HomeAsesorPage
+  },  {
+    path: 'negociacion-modal',
+    loadChildren: () => import('./negociacion-modal/negociacion-modal.module').then( m => m.NegociacionModalPageModule)
   }
+
 ];
 
 @NgModule({

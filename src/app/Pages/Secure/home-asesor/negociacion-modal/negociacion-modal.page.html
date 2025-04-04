@@ -1,0 +1,41 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{isEditMode ? 'Editar' : 'Nueva'}} Negociación</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancelar()">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item>
+      <ion-label position="stacked">Tipo de Pago</ion-label>
+      <ion-input [(ngModel)]="negociacion.tipo_pago" placeholder="Efectivo, Crédito, etc."></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Monto</ion-label>
+      <ion-input type="number" [(ngModel)]="negociacion.monto" placeholder="Ingrese el monto"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Estado</ion-label>
+      <ion-select [(ngModel)]="negociacion.estado">
+        <ion-select-option *ngFor="let estado of estados" [value]="estado">
+          {{estado}}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Detalles</ion-label>
+      <ion-textarea [(ngModel)]="negociacion.detalles" rows="4" placeholder="Detalles de la negociación"></ion-textarea>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" (click)="guardarNegociacion()" [disabled]="loading">
+    <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+    <span *ngIf="!loading">Guardar Negociación</span>
+  </ion-button>
+</ion-content>
