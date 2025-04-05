@@ -56,16 +56,18 @@ if ($post['accion'] == "login") {
 if ($post['accion'] == "cargarCasas") {
     $provincia = isset($post['provincia']) ? $post['provincia'] : '';
     $ciudad = isset($post['ciudad']) ? $post['ciudad'] : '';
+    $estado = isset($post['estado']) ? $post['estado'] : '';
     $direccion = isset($post['direccion']) ? $post['direccion'] : '';
 
-    // Siempre filtrar por estado "Disponible"
-    $where = "WHERE estado = 'Disponible'";
-    
+    $where = "WHERE 1=1";
     if (!empty($provincia)) {
         $where .= sprintf(" AND provincia = '%s'", mysqli_real_escape_string($mysqli, $provincia));
     }
     if (!empty($ciudad)) {
         $where .= sprintf(" AND ciudad = '%s'", mysqli_real_escape_string($mysqli, $ciudad));
+    }
+    if (!empty($estado)) {
+        $where .= sprintf(" AND estado = '%s'", mysqli_real_escape_string($mysqli, $estado));
     }
     if (!empty($direccion)) {
         $where .= sprintf(" AND direccion LIKE '%%%s%%'", mysqli_real_escape_string($mysqli, $direccion));
@@ -96,7 +98,7 @@ if ($post['accion'] == "cargarCasas") {
         }
         $respuesta = array('estado' => true, 'casas' => $casas);
     } else {
-        $respuesta = array('estado' => false, 'mensaje' => 'No se encontraron casas disponibles con los filtros seleccionados');
+        $respuesta = array('estado' => false, 'mensaje' => 'No se encontraron casas con los filtros seleccionados');
     }
     
     echo json_encode($respuesta);
@@ -486,6 +488,10 @@ elseif ($post['accion'] == "buscarNegociacion") {
 }
 
 elseif ($post['accion'] == "crearNegociacion") {
+    // Inicializar respuesta
+    $respuesta = ['estado' => false, 'mensaje' => 'Error desconocido'];
+    
+    // Validar datos requeridos
     $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
     $tipo_pago = isset($post['tipo_pago']) ? $mysqli->real_escape_string($post['tipo_pago']) : null;
     $monto = isset($post['monto']) ? floatval($post['monto']) : null;
@@ -497,18 +503,96 @@ elseif ($post['accion'] == "crearNegociacion") {
         exit;
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO negociaciones 
-                             (id_cita, tipo_pago, monto, estado, detalles, fecha_negociacion) 
-                             VALUES (?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssdss", $id_cita, $tipo_pago, $monto, $estado, $detalles);
+    // Iniciar transacción
+    $mysqli->begin_transaction();
 
-    if ($stmt->execute()) {
-        echo json_encode(['estado' => true, 'mensaje' => 'Negociación creada']);
-    } else {
-        echo json_encode(['estado' => false, 'mensaje' => 'Error al crear negociación']);
+    try {
+        // 1. Crear la negociación
+        $stmt = $mysqli->prepare("INSERT INTO negociaciones 
+                                (id_cita, tipo_pago, monto, estado, detalles, fecha_negociacion) 
+                                VALUES (?, ?, ?, ?, ?, NOW())");
+        $stmt->bind_param("ssdss", $id_cita, $tipo_pago, $monto, $estado, $detalles);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al crear negociación: " . $mysqli->error);
+        }
+
+        $id_negociacion = $mysqli->insert_id;
+
+        // 2. Obtener información de la casa y fecha de negociación
+        $consulta = "SELECT 
+                        n.fecha_negociacion,
+                        c.id_casa,
+                        ci.id_cita as id_cita_actual
+                     FROM negociaciones n
+                     JOIN citas ci ON n.id_cita = ci.id_cita
+                     JOIN casas c ON ci.id_casa = c.id_casa
+                     WHERE n.id_negociacion = ?";
+        
+        $stmt = $mysqli->prepare($consulta);
+        $stmt->bind_param("i", $id_negociacion);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            throw new Exception("No se pudo obtener información de la negociación recién creada");
+        }
+
+        $datos = $result->fetch_assoc();
+        $fecha_negociacion = $datos['fecha_negociacion'];
+        $id_casa = $datos['id_casa'];
+        $id_cita_actual = $datos['id_cita_actual'];
+
+        // 3. Eliminar citas futuras para esta casa (excepto la actual)
+        $eliminar = "DELETE FROM citas 
+                     WHERE id_casa = ? 
+                     AND CONCAT(fecha, ' ', hora) > ?
+                     AND id_cita != ?";
+        
+        $stmt = $mysqli->prepare($eliminar);
+        $stmt->bind_param("iss", $id_casa, $fecha_negociacion, $id_cita_actual);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Error al eliminar citas futuras: " . $mysqli->error);
+        }
+
+        $citas_eliminadas = $stmt->affected_rows;
+
+        // 4. Actualizar estado de la casa si la negociación está completada
+        if ($estado == 'Completada') {
+            $stmt = $mysqli->prepare("UPDATE casas SET estado = 'Vendido' WHERE id_casa = ?");
+            $stmt->bind_param("i", $id_casa);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error al actualizar estado de la casa: " . $mysqli->error);
+            }
+        }
+
+        // Confirmar transacción
+        $mysqli->commit();
+
+        // Preparar respuesta exitosa
+        $respuesta = [
+            'estado' => true, 
+            'mensaje' => 'Negociación creada exitosamente',
+            'id_negociacion' => $id_negociacion,
+            'citas_eliminadas' => $citas_eliminadas,
+            'casa_actualizada' => ($estado == 'Completada') ? 'Vendido' : false
+        ];
+
+    } catch (Exception $e) {
+        // Revertir transacción en caso de error
+        $mysqli->rollback();
+        $respuesta = [
+            'estado' => false,
+            'mensaje' => $e->getMessage()
+        ];
     }
+
+    echo json_encode($respuesta);
     exit;
 }
+
 
 elseif ($post['accion'] == "actualizarNegociacion") {
     $id_negociacion = isset($post['id_negociacion']) ? $mysqli->real_escape_string($post['id_negociacion']) : null;
@@ -636,3 +720,5 @@ elseif ($post['accion'] == "actualizarEstadoCasa") {
     }
     exit;
 }
+
+
