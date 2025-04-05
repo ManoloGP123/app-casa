@@ -4,6 +4,9 @@ import { ModalController, NavController } from '@ionic/angular';
 import { BuscarUsuarioPage } from './buscar-usuario/buscar-usuario.page';
 import { AlertController } from '@ionic/angular';
 
+
+
+
 @Component({
   selector: 'app-citas',
   standalone: false,
@@ -269,6 +272,6 @@ export class CitasPage implements OnInit {
     await alert.present();
   }
   cancelar(){
-    this.modalCtrl.dismiss();
+    this.navCtrl.navigateBack('/home-admin');
   }
 }

@@ -22,8 +22,14 @@ export class CasasModalPage implements OnInit {
     'Tungurahua', 'Zamora Chinchipe'
   ];
   
+  ciudadesPorProvincia: {[key: string]: string[]} = {
+    'Pichincha': ['Quito', 'Cayambe', 'Machachi', 'Sangolquí'],
+    'Guayas': ['Guayaquil', 'Durán', 'Samborondón'],
+    // Agrega más provincias y ciudades según necesites
+  };
+  
   ciudades: string[] = [];
-  estados: string[] = ['disponible', 'reservado', 'vendido'];
+  estados: string[] = ['Disponible', 'Reservado', 'Vendido'];
 
   // Modelo para el formulario
   nuevaCasa: any = {
@@ -54,28 +60,17 @@ export class CasasModalPage implements OnInit {
       
       // Si hay provincia, cargar sus ciudades
       if (this.casa.provincia) {
-        this.cargarCiudades(this.casa.provincia);
+        this.onProvinciaChange();
       }
     }
   }
 
-  cargarCiudades(provincia: string) {
-    let datos = {
-      accion: 'obtenerCiudades',
-      provincia: provincia
-    };
-
-    this.authService.postData(datos).subscribe((res: any) => {
-      if (res.estado) {
-        this.ciudades = res.ciudades;
-      }
-    });
-  }
-
   onProvinciaChange() {
     if (this.nuevaCasa.provincia) {
-      this.cargarCiudades(this.nuevaCasa.provincia);
+      this.ciudades = this.ciudadesPorProvincia[this.nuevaCasa.provincia] || [];
       this.nuevaCasa.ciudad = ''; // Resetear ciudad al cambiar provincia
+    } else {
+      this.ciudades = [];
     }
   }
 
