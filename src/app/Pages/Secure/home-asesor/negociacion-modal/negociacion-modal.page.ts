@@ -14,7 +14,8 @@ export class NegociacionModalPage implements OnInit {
     tipo_pago: '',
     monto: null,
     detalles: '',
-    estado: 'En proceso de pago'
+    estado: 'En proceso de pago',
+    id_casa: '' // Nuevo campo para almacenar el id_casa
   };
   loading: boolean = false;
   isEditMode: boolean = false;
@@ -27,7 +28,21 @@ export class NegociacionModalPage implements OnInit {
 
   async ngOnInit() {
     this.negociacion.id_cita = await this.authService.getSession('id_cita');
+    await this.obtenerIdCasa(); // Primero obtenemos el id_casa
     await this.cargarNegociacion();
+  }
+
+  async obtenerIdCasa() {
+    const data = {
+      accion: 'obtenerIdCasaDeCita',
+      id_cita: this.negociacion.id_cita
+    };
+
+    this.authService.postData(data).subscribe((res: any) => {
+      if (res.estado) {
+        this.negociacion.id_casa = res.id_casa;
+      }
+    });
   }
 
   async cargarNegociacion() {
@@ -40,7 +55,7 @@ export class NegociacionModalPage implements OnInit {
     this.authService.postData(data).subscribe((res: any) => {
       this.loading = false;
       if (res.estado && res.negociacion) {
-        this.negociacion = res.negociacion;
+        this.negociacion = {...this.negociacion, ...res.negociacion};
         this.isEditMode = true;
       }
     }, error => {
@@ -60,13 +75,8 @@ export class NegociacionModalPage implements OnInit {
 
     this.authService.postData(data).subscribe(async (res: any) => {
       if (res.estado) {
-        // Si el estado es Completada, actualizar estado de la cita
-        if (this.negociacion.estado === 'Completada') {
-          await this.actualizarEstadoCita();
-        } else {
-          this.authService.showToast('Negociación guardada correctamente');
-          this.modalCtrl.dismiss({ success: true });
-        }
+        // Actualizar estado de la cita y casa según el estado de la negociación
+        await this.actualizarEstados();
       } else {
         this.authService.showToast(res.mensaje || 'Error al guardar');
       }
@@ -77,6 +87,15 @@ export class NegociacionModalPage implements OnInit {
     });
   }
 
+  async actualizarEstados() {
+    // Primero actualizar estado de la cita a "Completada"
+    await this.actualizarEstadoCita();
+    
+    // Luego actualizar estado de la casa según el estado de la negociación
+    const estadoCasa = this.negociacion.estado === 'Completada' ? 'Vendido' : 'Reservado';
+    await this.actualizarEstadoCasa(estadoCasa);
+  }
+
   async actualizarEstadoCita() {
     const data = {
       accion: 'actualizarEstadoCita',
@@ -85,11 +104,28 @@ export class NegociacionModalPage implements OnInit {
     };
 
     this.authService.postData(data).subscribe((res: any) => {
+      if (!res.estado) {
+        this.authService.showToast('Error al actualizar estado de cita');
+      }
+    });
+  }
+
+  async actualizarEstadoCasa(estado: string) {
+    const data = {
+      accion: 'actualizarEstadoCasa',
+      id_casa: this.negociacion.id_casa,
+      estado: estado
+    };
+
+    this.authService.postData(data).subscribe((res: any) => {
       if (res.estado) {
-        this.authService.showToast('Negociación y cita completadas');
+        const message = this.negociacion.estado === 'Completada' 
+          ? 'Negociación completada. Casa marcada como Vendido' 
+          : 'Negociación en proceso. Casa marcada como Reservado';
+        this.authService.showToast(message);
         this.modalCtrl.dismiss({ success: true });
       } else {
-        this.authService.showToast('Negociación guardada pero error al actualizar cita');
+        this.authService.showToast('Error al actualizar estado de casa');
       }
     });
   }
@@ -99,8 +135,8 @@ export class NegociacionModalPage implements OnInit {
       this.authService.showToast('Seleccione un tipo de pago');
       return false;
     }
-    if (!this.negociacion.monto || isNaN(this.negociacion.monto)) {
-      this.authService.showToast('Ingrese un monto válido');
+    if (!this.negociacion.monto || isNaN(this.negociacion.monto) || this.negociacion.monto <= 0) {
+      this.authService.showToast('Ingrese un monto válido mayor a cero');
       return false;
     }
     return true;

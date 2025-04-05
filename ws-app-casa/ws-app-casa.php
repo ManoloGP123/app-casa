@@ -560,6 +560,7 @@ elseif ($post['accion'] == "actualizarEstadoCita") {
     }
     exit;
 }
+
 elseif ($post['accion'] == "buscarNegociacion2") {
     $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
 
@@ -601,4 +602,39 @@ elseif ($post['accion'] == "eliminarNegociacion") {
     exit;
 }
 
+elseif ($post['accion'] == "obtenerIdCasaDeCita") {
+    $id_cita = isset($post['id_cita']) ? $mysqli->real_escape_string($post['id_cita']) : null;
 
+    $stmt = $mysqli->prepare("SELECT id_casa FROM citas WHERE id_cita = ?");
+    $stmt->bind_param("s", $id_cita);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        echo json_encode(['estado' => true, 'id_casa' => $row['id_casa']]);
+    } else {
+        echo json_encode(['estado' => false]);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "actualizarEstadoCasa") {
+    $id_casa = isset($post['id_casa']) ? $mysqli->real_escape_string($post['id_casa']) : null;
+    $estado = isset($post['estado']) ? $mysqli->real_escape_string($post['estado']) : null;
+
+    if (!$id_casa || !$estado) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Datos incompletos']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("UPDATE casas SET estado = ? WHERE id_casa = ?");
+    $stmt->bind_param("ss", $estado, $id_casa);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Estado de casa actualizado']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al actualizar']);
+    }
+    exit;
+}
