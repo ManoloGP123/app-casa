@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../Services/auth.service';
 import { ModalController, AlertController } from '@ionic/angular';
 import { CitasPage } from '../citas/citas.page';
+//navcontroller
+import { NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-citas-admin',
@@ -30,7 +32,8 @@ export class CitasAdminPage implements OnInit {
   constructor(
     private authService: AuthService,
     private modalCtrl: ModalController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private navCtrl: NavController
   ) {}
 
   async ngOnInit() {
@@ -172,6 +175,11 @@ export class CitasAdminPage implements OnInit {
       buttons: ['OK']
     });
     await alert.present();
+  }
+  back(){
+    //ir atras a home-admin
+    this.navCtrl.navigateRoot('/home-admin');
+
   }
   
 }

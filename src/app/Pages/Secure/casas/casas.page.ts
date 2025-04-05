@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ModalController, AlertController } from '@ionic/angular';
 import { AuthService } from '../../../Services/auth.service';
 import { CasasModalPage } from './casas-modal/casas-modal.page';
+//navcontroller
+import { NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-casas',
@@ -33,7 +35,8 @@ export class CasasPage implements OnInit {
   constructor(
     private authService: AuthService,
     private modalCtrl: ModalController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
@@ -114,5 +117,9 @@ export class CasasPage implements OnInit {
     this.ciudadSeleccionada = '';
     this.filtroEstado = 'todos';
     this.cargarCasas();
+  }
+  back(){
+    //ir atras a home-admin
+    this.navCtrl.navigateRoot('/home-admin');
   }
 }

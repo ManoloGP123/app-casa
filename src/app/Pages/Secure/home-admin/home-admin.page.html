@@ -1,8 +1,13 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Administración de Propiedades</ion-title>
+    <ion-title>Administración de 
+      <br>
+      Propiedades</ion-title>
   </ion-toolbar>
 </ion-header>
+
+<!-- Barra de navegación añadida aquí -->
+
 
 <ion-content>
   <ion-grid class="ion-no-padding">
@@ -105,3 +110,21 @@
     </ion-row>
   </ion-grid>
 </ion-content>
+<ion-footer>
+  <ion-toolbar color="primary">
+    <div style="display: flex; justify-content: space-around; width: 100%;">
+      <ion-button fill="clear" routerLink="/casas" style="flex-direction: column; color: rgb(0, 0, 0);">
+        <ion-icon name="home-outline"></ion-icon>
+        <ion-label>Casas</ion-label>
+      </ion-button>
+      <ion-button fill="clear" routerLink="/citas-admin" style="flex-direction: column; color: rgb(0, 0, 0);">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <ion-label>Citas</ion-label>
+      </ion-button>
+      <ion-button fill="clear" routerLink="/usuarios" style="flex-direction: column; color: rgb(1, 1, 1);">
+        <ion-icon name="people-outline"></ion-icon>
+        <ion-label>Usuarios</ion-label>
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

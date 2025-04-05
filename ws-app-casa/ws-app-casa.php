@@ -56,18 +56,16 @@ if ($post['accion'] == "login") {
 if ($post['accion'] == "cargarCasas") {
     $provincia = isset($post['provincia']) ? $post['provincia'] : '';
     $ciudad = isset($post['ciudad']) ? $post['ciudad'] : '';
-    $estado = isset($post['estado']) ? $post['estado'] : '';
     $direccion = isset($post['direccion']) ? $post['direccion'] : '';
 
-    $where = "WHERE 1=1";
+    // Siempre filtrar por estado "Disponible"
+    $where = "WHERE estado = 'Disponible'";
+    
     if (!empty($provincia)) {
         $where .= sprintf(" AND provincia = '%s'", mysqli_real_escape_string($mysqli, $provincia));
     }
     if (!empty($ciudad)) {
         $where .= sprintf(" AND ciudad = '%s'", mysqli_real_escape_string($mysqli, $ciudad));
-    }
-    if (!empty($estado)) {
-        $where .= sprintf(" AND estado = '%s'", mysqli_real_escape_string($mysqli, $estado));
     }
     if (!empty($direccion)) {
         $where .= sprintf(" AND direccion LIKE '%%%s%%'", mysqli_real_escape_string($mysqli, $direccion));
@@ -98,7 +96,7 @@ if ($post['accion'] == "cargarCasas") {
         }
         $respuesta = array('estado' => true, 'casas' => $casas);
     } else {
-        $respuesta = array('estado' => false, 'mensaje' => 'No se encontraron casas con los filtros seleccionados');
+        $respuesta = array('estado' => false, 'mensaje' => 'No se encontraron casas disponibles con los filtros seleccionados');
     }
     
     echo json_encode($respuesta);

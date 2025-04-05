@@ -268,4 +268,7 @@ export class CitasPage implements OnInit {
     });
     await alert.present();
   }
+  cancelar(){
+    this.modalCtrl.dismiss();
+  }
 }
