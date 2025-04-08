@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ nuevoUsuario ? 'Nuevo Usuario' : 'Editar Usuario' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancelar()">Cancelar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Nombres Completos</ion-label>
+        <ion-input [(ngModel)]="datosUsuario.nombres_completos"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Dirección</ion-label>
+        <ion-input [(ngModel)]="datosUsuario.direccion"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Teléfono</ion-label>
+        <ion-input [(ngModel)]="datosUsuario.telefono" type="tel"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Email</ion-label>
+        <ion-input [(ngModel)]="datosUsuario.email" type="email"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Rol</ion-label>
+        <ion-select [(ngModel)]="datosUsuario.id_rol">
+          <ion-select-option *ngFor="let rol of roles" [value]="rol.id_rol">
+            {{ rol.nombre_rol }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Contraseña</ion-label>
+        <ion-input [(ngModel)]="datosUsuario.contrasena" type="password"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Confirmar Contraseña</ion-label>
+        <ion-input [(ngModel)]="datosUsuario.confirmar_contrasena" type="password"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" (click)="guardarUsuario()">
+        {{ nuevoUsuario ? 'Crear Usuario' : 'Actualizar Usuario' }}
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

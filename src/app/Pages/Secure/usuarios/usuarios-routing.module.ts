@@ -7,7 +7,11 @@ const routes: Routes = [
   {
     path: '',
     component: UsuariosPage
+  },  {
+    path: 'modal-usuarios',
+    loadChildren: () => import('./modal-usuarios/modal-usuarios.module').then( m => m.ModalUsuariosPageModule)
   }
+
 ];
 
 @NgModule({

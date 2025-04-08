@@ -52,6 +52,11 @@ const routes: Routes = [
     path: 'citas-asesor',
     loadChildren: () => import('./Pages/Secure/citas-asesor/citas-asesor.module').then( m => m.CitasAsesorPageModule)
   },
+  
+  {
+    path: 'registro',
+    loadChildren: () => import('./Pages/Secure/registro/registro.module').then( m => m.RegistroPageModule)
+  },
 ];
 
 @NgModule({

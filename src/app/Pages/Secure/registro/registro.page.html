@@ -1,0 +1,71 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Registro de Usuario</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form (ngSubmit)="registrar()">
+    <ion-list>
+      <!-- Nombres Completos -->
+      <ion-item>
+        <ion-label position="stacked">Nombres Completos *</ion-label>
+        <ion-input [(ngModel)]="usuario.nombres_completos" name="nombres_completos" required></ion-input>
+      </ion-item>
+
+      <!-- Dirección -->
+      <ion-item>
+        <ion-label position="stacked">Dirección</ion-label>
+        <ion-input [(ngModel)]="usuario.direccion" name="direccion"></ion-input>
+      </ion-item>
+
+      <!-- Teléfono -->
+      <ion-item>
+        <ion-label position="stacked">Teléfono *</ion-label>
+        <ion-input [(ngModel)]="usuario.telefono" name="telefono" type="tel" required></ion-input>
+      </ion-item>
+
+      <!-- Email -->
+      <ion-item>
+        <ion-label position="stacked">Email *</ion-label>
+        <ion-input [(ngModel)]="usuario.email" name="email" type="email" required></ion-input>
+      </ion-item>
+
+      <!-- Rol -->
+      <ion-item>
+        <ion-label position="stacked">Rol *</ion-label>
+        <ion-select [(ngModel)]="usuario.id_rol" name="id_rol" required>
+          <ion-select-option value="">Seleccione un rol</ion-select-option>
+          <ion-select-option *ngFor="let rol of roles" [value]="rol.id_rol">
+            {{ rol.nombre_rol }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- Contraseña -->
+      <ion-item>
+        <ion-label position="stacked">Contraseña *</ion-label>
+        <ion-input [(ngModel)]="usuario.contrasena" name="contrasena" [type]="showPassword ? 'text' : 'password'" required>
+        </ion-input>
+        <ion-button fill="clear" slot="end" (click)="togglePasswordVisibility()">
+          <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+        </ion-button>
+      </ion-item>
+
+      <!-- Confirmar Contraseña -->
+      <ion-item>
+        <ion-label position="stacked">Confirmar Contraseña *</ion-label>
+        <ion-input [(ngModel)]="usuario.confirmar_contrasena" name="confirmar_contrasena" [type]="showConfirmPassword ? 'text' : 'password'" required>
+        </ion-input>
+        <ion-button fill="clear" slot="end" (click)="toggleConfirmPasswordVisibility()">
+          <ion-icon [name]="showConfirmPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+
+    <ion-button expand="block" type="submit" class="ion-margin-top">Registrarse</ion-button>
+  </form>
+</ion-content>

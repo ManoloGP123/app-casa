@@ -721,4 +721,169 @@ elseif ($post['accion'] == "actualizarEstadoCasa") {
     exit;
 }
 
+if ($post['accion'] == "cargarUsuarios") {
+    $busqueda = isset($post['busqueda']) ? $mysqli->real_escape_string($post['busqueda']) : '';
+    $rol = isset($post['rol']) ? $mysqli->real_escape_string($post['rol']) : '';
+
+    $where = "WHERE 1=1";
+    if (!empty($busqueda)) {
+        $where .= " AND (u.nombres_completos LIKE '%$busqueda%' OR u.email LIKE '%$busqueda%')";
+    }
+    if (!empty($rol)) {
+        $where .= " AND u.id_rol = '$rol'";
+    }
+
+    $query = "SELECT 
+                u.id_usuario, 
+                u.nombres_completos, 
+                u.direccion, 
+                u.telefono, 
+                u.id_rol,
+                u.email,
+                r.nombre_rol
+              FROM usuarios u
+              JOIN roles r ON u.id_rol = r.id_rol
+              $where
+              ORDER BY u.nombres_completos";
+
+    $result = $mysqli->query($query);
+
+    if ($result->num_rows > 0) {
+        $usuarios = array();
+        while ($row = $result->fetch_assoc()) {
+            $usuarios[] = $row;
+        }
+        echo json_encode(['estado' => true, 'usuarios' => $usuarios]);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'No se encontraron usuarios']);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "cargarRoles") {
+    $query = "SELECT id_rol, nombre_rol FROM roles ORDER BY nombre_rol";
+    $result = $mysqli->query($query);
+
+    if ($result->num_rows > 0) {
+        $roles = array();
+        while ($row = $result->fetch_assoc()) {
+            $roles[] = $row;
+        }
+        echo json_encode(['estado' => true, 'roles' => $roles]);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'No se encontraron roles']);
+    }
+    exit;
+}
+
+elseif ($post['accion'] == "crearUsuario") {
+    $usuario = $post['usuario'];
+    
+    // Validar campos requeridos
+    if (empty($usuario['nombres_completos']) || empty($usuario['email']) || empty($usuario['id_rol'])) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Campos requeridos faltantes']);
+        exit;
+    }
+
+    // Asignar valores a variables
+    $nombres = $mysqli->real_escape_string($usuario['nombres_completos']);
+    $direccion = $mysqli->real_escape_string($usuario['direccion']);
+    $telefono = $mysqli->real_escape_string($usuario['telefono']);
+    $id_rol = $mysqli->real_escape_string($usuario['id_rol']);
+    $email = $mysqli->real_escape_string($usuario['email']);
+    
+    // Encriptar contraseña si se proporcionó
+    $contrasena_hash = !empty($usuario['contrasena']) ? password_hash($usuario['contrasena'], PASSWORD_DEFAULT) : '';
+
+    $stmt = $mysqli->prepare("INSERT INTO usuarios (
+                                nombres_completos, 
+                                direccion, 
+                                telefono, 
+                                id_rol, 
+                                email, 
+                                contrasena
+                              ) VALUES (?, ?, ?, ?, ?, ?)");
+    
+    // Pasar variables en lugar de valores directos
+    $stmt->bind_param("ssssss", $nombres, $direccion, $telefono, $id_rol, $email, $contrasena_hash);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Usuario creado correctamente']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al crear usuario: ' . $mysqli->error]);
+    }
+    exit;
+}
+elseif ($post['accion'] == "actualizarUsuario") {
+    $usuario = $post['usuario'];
+    
+    // Validar campos requeridos
+    if (empty($usuario['id_usuario']) || empty($usuario['nombres_completos']) || empty($usuario['email']) || empty($usuario['id_rol'])) {
+        echo json_encode(['estado' => false, 'mensaje' => 'Campos requeridos faltantes']);
+        exit;
+    }
+
+    // Asignar valores a variables
+    $id_usuario = $mysqli->real_escape_string($usuario['id_usuario']);
+    $nombres = $mysqli->real_escape_string($usuario['nombres_completos']);
+    $direccion = $mysqli->real_escape_string($usuario['direccion']);
+    $telefono = $mysqli->real_escape_string($usuario['telefono']);
+    $id_rol = $mysqli->real_escape_string($usuario['id_rol']);
+    $email = $mysqli->real_escape_string($usuario['email']);
+
+    // Preparar la consulta de actualización
+    if (!empty($usuario['contrasena'])) {
+        $contrasena_hash = password_hash($usuario['contrasena'], PASSWORD_DEFAULT);
+        $query = "UPDATE usuarios SET 
+                    nombres_completos = ?, 
+                    direccion = ?, 
+                    telefono = ?, 
+                    id_rol = ?, 
+                    email = ?, 
+                    contrasena = ?
+                  WHERE id_usuario = ?";
+        $stmt = $mysqli->prepare($query);
+        $stmt->bind_param("sssssss", $nombres, $direccion, $telefono, $id_rol, $email, $contrasena_hash, $id_usuario);
+    } else {
+        $query = "UPDATE usuarios SET 
+                    nombres_completos = ?, 
+                    direccion = ?, 
+                    telefono = ?, 
+                    id_rol = ?, 
+                    email = ?
+                  WHERE id_usuario = ?";
+        $stmt = $mysqli->prepare($query);
+        $stmt->bind_param("ssssss", $nombres, $direccion, $telefono, $id_rol, $email, $id_usuario);
+    }
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Usuario actualizado correctamente']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al actualizar usuario: ' . $mysqli->error]);
+    }
+    exit;
+}
+
+
+elseif ($post['accion'] == "eliminarUsuario") {
+    $id = isset($post['id']) ? $mysqli->real_escape_string($post['id']) : null;
+    
+    if (!$id) {
+        echo json_encode(['estado' => false, 'mensaje' => 'ID no proporcionado']);
+        exit;
+    }
+
+    $stmt = $mysqli->prepare("DELETE FROM usuarios WHERE id_usuario = ?");
+    $stmt->bind_param("s", $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(['estado' => true, 'mensaje' => 'Usuario eliminado correctamente']);
+    } else {
+        echo json_encode(['estado' => false, 'mensaje' => 'Error al eliminar usuario']);
+    }
+    exit;
+}
+
+
+
 

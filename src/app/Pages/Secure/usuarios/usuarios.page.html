@@ -1,17 +1,64 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>usuarios</ion-title>
+    <ion-title>Administrar Usuarios</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">usuarios</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <!-- Barra de búsqueda y filtros -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Filtros</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-input
+          [(ngModel)]="terminoBusqueda"
+          placeholder="Buscar por nombre o email"
+          (ionChange)="buscarUsuarios()"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Rol</ion-label>
+        <ion-select [(ngModel)]="rolSeleccionado" (ionChange)="buscarUsuarios()">
+          <ion-select-option value="">Todos los roles</ion-select-option>
+          <ion-select-option *ngFor="let rol of roles" [value]="rol.id_rol">
+            {{ rol.nombre_rol }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-button expand="block" fill="outline" (click)="limpiarFiltros()">
+        Limpiar Filtros
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Lista de usuarios -->
+  <ion-list>
+    <ion-item *ngFor="let usuario of usuarios">
+      <ion-label>
+        <h2>{{ usuario.nombres_completos }}</h2>
+        <p>{{ usuario.email }}</p>
+        <p>{{ usuario.nombre_rol }}</p>
+        <p>{{ usuario.telefono }}</p>
+      </ion-label>
+      
+      <ion-button fill="clear" color="warning" (click)="abrirModalUsuario(usuario)">
+        <ion-icon name="pencil-outline"></ion-icon>
+      </ion-button>
+      
+      <ion-button fill="clear" color="danger" (click)="eliminarUsuario(usuario.id_usuario)">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <!-- Botón flotante para agregar -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="abrirModalUsuario()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
-
-
-
-
