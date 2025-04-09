@@ -12,38 +12,49 @@ if ($post['accion'] == "login") {
     $email = $post['email'];
     $contrasena = $post['contrasena'];
 
+    // Buscar al usuario solo por email
     $sentencia = sprintf("
         SELECT 
             u.id_usuario, 
             u.nombres_completos, 
             u.id_rol,
-            r.nombre_rol
+            r.nombre_rol,
+            u.contrasena
         FROM 
             usuarios u
         INNER JOIN 
             roles r ON u.id_rol = r.id_rol
         WHERE 
-            u.email = '%s' AND 
-            u.contrasena = '%s'",
-        mysqli_real_escape_string($mysqli, $email),
-        mysqli_real_escape_string($mysqli, $contrasena));
+            u.email = '%s'",
+        mysqli_real_escape_string($mysqli, $email));
     
     $result = mysqli_query($mysqli, $sentencia);
 
     if (mysqli_num_rows($result) > 0) {
         $usuario = mysqli_fetch_assoc($result);
-        
-        $respuesta = array(
-            'estado' => true,
-            'mensaje' => 'Login exitoso',
-            'usuario' => array(
-                'id_usuario' => $usuario['id_usuario'],
-                'nombres_completos' => $usuario['nombres_completos'],
-                'id_rol' => $usuario['id_rol'],
-                'nombre_rol' => $usuario['nombre_rol']
-            )
-        );
+
+        // Verificar la contraseña
+        if (password_verify($contrasena, $usuario['contrasena'])) {
+            // Login exitoso
+            $respuesta = array(
+                'estado' => true,
+                'mensaje' => 'Login exitoso',
+                'usuario' => array(
+                    'id_usuario' => $usuario['id_usuario'],
+                    'nombres_completos' => $usuario['nombres_completos'],
+                    'id_rol' => $usuario['id_rol'],
+                    'nombre_rol' => $usuario['nombre_rol']
+                )
+            );
+        } else {
+            // Contraseña incorrecta
+            $respuesta = array(
+                'estado' => false,
+                'mensaje' => 'Credenciales incorrectas'
+            );
+        }
     } else {
+        // Email no encontrado
         $respuesta = array(
             'estado' => false,
             'mensaje' => 'Credenciales incorrectas'
